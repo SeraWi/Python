@@ -25,16 +25,17 @@ from random import *
 #users =[1,2,3,4,...100]
 users =range(1,21) #1 부터 20까지의 숫자를 생성
 print(type(users)) #<class 'range'>
-users= list(users) #list 타입으로 변환
+users= list(users) #list 타입으로 변환 (list 는 순서가 있다)<class 'list'>
 print(type(users))
 
 print(users)
 shuffle(users)
 print(users)
 
-winners = sample(users,4) #1명은 치킨, 3명은 커피
+winners = sample(users,4) #1명은 치킨, 3명은 커피 sample(list, 뽑을 갯수)
+print(winners) #[15, 6, 13, 18]
 
 print("-- 당첨자 발표 --")
-print("치킨 당첨자 {0}" . format(winners[0]))
-print("커피 당첨자 {0}" . format(winners[1:]))
+print("치킨 당첨자 {0}" . format(winners[0])) #15
+print("커피 당첨자 {0}" . format(winners[1:])) #[6, 13, 18]
 print("-- 축하합니다.")
