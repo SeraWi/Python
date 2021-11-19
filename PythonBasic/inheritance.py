@@ -3,15 +3,21 @@
 
 #일반 유닛
 class Unit :
-    def __init__(self,name,hp) :
+    def __init__(self,name,hp,speed) :
         self.name = name
         self.hp = hp
+        self.speed = speed
+    def move(self,location):
+        print("[지상유닛이동]")
+        print("{0} : {1} 방향으로 이동합니다. [속도 {2}]" \
+             . format(self.name, location, self.speed))
+
 
 #공격 유닛이 일반 유닛 상속 받아서 사용
 class AttackUnit(Unit) :
-    def __init__(self, name, hp , damage) :
+    def __init__(self, name, hp ,speed, damage) :
         # 상속 받은 init
-        Unit.__init__(self, name, hp)
+        Unit.__init__(self, name, hp, speed)
         self.damage = damage
 
     def attack (self, location):
@@ -45,9 +51,56 @@ class Flyable:
 class FlyableAttackUnit(AttackUnit,Flyable):
     def __init__(self, name, hp, damage, flying_speed):
         #멤버 변수 초기화
-        AttackUnit.__init__(self,name,hp,damage)
+        AttackUnit.__init__(self,name,hp,0,damage)  #지상 스피드는 0으로 처리
         Flyable.__init__(self,flying_speed)
+    def move(self, location) :
+        print("[공중유닛이동]")
+        self.fly(self.name, location)
+
+
 
 # 발키리 : 공중 공격 유닛, 한번에 14발 미사일 발사
 valkyrie = FlyableAttackUnit("발키리", 200,60,5)
 valkyrie.fly(valkyrie.name,"3시")
+
+
+#오버로딩 : 상속관계에서 메서드 재정의
+
+#벌쳐 : 지상 유닛, 기동성이 좋음
+vulture = AttackUnit("벌처" , 80,10,20)
+#배틀크루저 : 공중 유닛, 체력, 공격력 좋음
+battlecruiser = FlyableAttackUnit("배틀크루져",500,25,3)
+
+vulture.move("11시")
+#battlecruiser.fly(battlecruiser.name,"3시")
+
+battlecruiser.move("3시")
+
+#pass
+
+#건물
+# class BulidingUnit(Unit):
+#     def __init__(self, name, hp, location):
+#         pass 
+    # pass 완성되지 않았지만 pass시킴
+
+# 서플라이 디폿 : 건물임, 1개 건물 = 8유닛을
+#supply_depot = BulidingUnit("서플라이 디폿", 500, "7시")
+
+# def game_start():
+#     print("[알림] 새로운 게임을 시작합니다")
+
+# def game_over():
+#     pass
+
+# game_start()
+# game_over()
+
+
+#super
+
+class BulidingUnit(Unit):
+    def __init__(self, name, hp, location):
+       # Unit.__init__(self.name,hp,0)
+       super().__init__(name,hp,0) # 상속받는 부모 init 쓰기
+       self.location = location
