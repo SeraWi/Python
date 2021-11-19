@@ -13,8 +13,8 @@ with open("profile.pickle","rb") as profile_file :
 
 
 #일반적 파일을 with로 쓰기
-# with open("study.txt", "w", encoding="utf") as study_file:
-#     study_file.write("파이썬을 열심히 공부하고 있어요")
+with open("study.txt", "w", encoding="utf") as study_file:
+    study_file.write("파이썬을 열심히 공부하고 있어요")
 
 
 # 파일 읽어오기
