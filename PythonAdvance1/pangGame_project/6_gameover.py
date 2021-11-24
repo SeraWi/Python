@@ -1,7 +1,11 @@
-# 3. 공 움직이기
+# 6. 게임 오버
+# 모든 공을 없애면 게임 종료
+# 캐릭터가 공에 닿으면 게임 종료
+# 시간 제한 99초 초과시 게임 종료
 
 import os
 import pygame
+from pygame.font import Font
 #############################################################
 # 기본 초기화 (반드시 해야 하는 것들)
 # init 호출
@@ -78,8 +82,19 @@ balls.append({
     "init_spe_y" : ball_speed_y[0]  #y 최초 속도
 })
 
+#사라질 무기, 공 정보 저장 변수
+weapon_to_remove =-1
+ball_to_remove =-1
 
+# font정의
+game_font = pygame.font.Font(None,40)
+ 
+#게임 플레이 시간
+total_time = 100
+start_ticks = pygame.time.get_ticks() #시작 시간
 
+#게임 종료 메시지 /Time out(시간 초과), Mission complete(성공), Game over(캐릭터 사망)
+game_result ="Game Over" 
 
 # 이벤트 루프
 running =True 
@@ -160,6 +175,92 @@ while(running) :
         
 
     # 4. 충돌 처리
+    character_rect = character.get_rect()
+    character_rect.left = character_x_pos
+    character_rect.top = character_y_pos
+
+    for ball_idx, ball_val in enumerate(balls) :
+        ball_pos_x = ball_val["pos_x"]
+        ball_pos_y = ball_val["pos_y"]
+        ball_img_idx=ball_val["img_idx"]
+
+        #공 rect 정보 업데이트
+        ball_rect= ball_images[ball_img_idx].get_rect()
+        ball_rect.left = ball_pos_x
+        ball_rect.top = ball_pos_y
+
+        #공과 캐릭터 충돌 처리
+        if character_rect.colliderect(ball_rect) : #캐릭터 공에 부딪히면
+            running = False
+            break  #게임 종료
+
+        #공과 무기들 충돌 처리
+        for weapon_idx, weapon_val in enumerate(weapons):
+            weapon_pos_x = weapon_val[0]
+            weapon_pos_y = weapon_val[1]
+
+            #무기 rect 정보 업데이트
+            weapon_rect= weapon.get_rect()
+            weapon_rect.left = weapon_pos_x
+            weapon_rect.top = weapon_pos_y
+
+            #충돌 체크
+            if weapon_rect.colliderect(ball_rect):
+                #충돌 하면 공과 무기 같이 사라지기
+                weapon_to_remove = weapon_idx #해당무기 없애기 위한 값 설정
+                ball_to_remove= ball_idx #해당 공 없애기 위한 값 설정
+                
+                #공 무기로 쏘면 큰공은 사라지고 작은 공 2개 생성
+                # 가장 작은 크기의 공이 아니라면 다음 단계의 공으로 나눠주기
+                if ball_img_idx <3 :
+                    #현재 공 크기 정보를 가져옴
+                    ball_width = ball_rect.size[0]
+                    ball_height= ball_rect.size[1]
+
+                    #나눠진 공 정보                 현재 인덱스 +1 -> 작아진 공
+                    small_ball_rect = ball_images[ball_img_idx+1].get_rect()
+                    small_ball_width = small_ball_rect.size[0]
+                    small_ball_height = small_ball_rect.size[1]
+
+                    #왼쪽으로 튕겨나가는 작은 공
+                    balls.append({
+                            "pos_x" : ball_pos_x + ball_width /2- small_ball_width/2 , # 공의 x좌표
+                            "pos_y" : ball_pos_y + ball_height/2 -small_ball_height/2 , # 공의 y좌표
+                            "img_idx" :ball_img_idx+1, # 공의 이미지 idx
+                            "to_x" : -3, #공의 x축 이동 방향 -3이면 왼쪽으로 3이면 오른쪽으로
+                            "to_y" : -6, # 공의 y축 이동 방향
+                            "init_spe_y" : ball_speed_y[ball_img_idx+1]  #y 최초 속도
+                    })
+
+                    #오른쪽으로 튕겨나가는 작은 공
+                    balls.append({
+                            "pos_x" : ball_pos_x + ball_width /2- small_ball_width/2 , # 공의 x좌표
+                            "pos_y" : ball_pos_y + ball_height/2 -small_ball_height/2 , # 공의 y좌표
+                            "img_idx" :ball_img_idx+1, # 공의 이미지 idx
+                            "to_x" : 3, #공의 x축 이동 방향 -3이면 왼쪽으로 3이면 오른쪽으로
+                            "to_y" : -6, # 공의 y축 이동 방향
+                            "init_spe_y" : ball_speed_y[ball_img_idx+1]  #y 최초 속도
+                    })   
+
+                break
+            else : #게임 게속 진행
+                continue #안쪽 for문 조건이 맞지 않으면 continue, 바깥 for 문 계속 실행
+            break #안쪽 for 문에서 break 를 만나면 여기로 진입 가능
+
+        # 충돌된 공 or 무기 없애기
+        if ball_to_remove > -1 :
+            del balls[ball_to_remove]
+            #다시 초기화
+            ball_to_remove = -1
+        if weapon_to_remove > -1 :
+            del weapons[weapon_to_remove]
+            weapon_to_remove =-1
+
+        # 모든 공을 없앤 경우 게임 종료
+        if len(balls) == 0:
+            game_result = "Mission Complete"
+            running=False
+
     # 5. 화면에 그리기(순서대로 그린다)
     screen.blit(background,(0,0))
 
@@ -178,8 +279,28 @@ while(running) :
     screen.blit(character,(character_x_pos,character_y_pos))
 
 
+    #경과 시간 계산
+    elapsed_time = (pygame.time.get_ticks()- start_ticks) /1000
+    timer= game_font.render("Time : {}" .format(int(total_time- elapsed_time)),True,(255,255,255))
+    screen.blit(timer,(10,10))
+
+    #시간 초과했다면
+    if total_time-elapsed_time <=0 :
+        game_result = "Time Over"
+        running = False
+
     # 6. update ()반드시 호출
     pygame.display.update()
+
+#게임 오버 메시지
+msg= game_font.render(game_result,True,(255,255,0))
+msg_rect = msg.get_rect(center=(int(screen_width/2) ,int(screen_height/2)))
+screen.blit(msg, msg_rect)
+pygame.display.update()
+
+#딜레이 2초대기
+pygame.time.delay(2000)
+
 # pygame 종료
 pygame.quit()
 
